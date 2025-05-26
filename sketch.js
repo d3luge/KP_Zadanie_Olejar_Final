@@ -11,6 +11,12 @@ let topMargin = 0; // Will be set dynamically
 let savedPattern = [];
 let savedAliveCount = [];
 let buttons = [];
+let cellSizeSlider;
+let bottomMargin = 45;
+let sliderLabel;
+let hueSlider;
+let gridHue = 0;
+let hueLabel;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -30,6 +36,26 @@ function setup() {
     { label: 'Add Goblin', callback: generateGoblin },
     { label: 'Add Spoon', callback: generateSpoon }
   ];
+
+  cellSizeSlider = createSlider(5, 25, cellSize, 1);
+  cellSizeSlider.position(windowWidth / 2 - windowWidth / 3, windowHeight - 40); // Place it below the buttons
+  cellSizeSlider.style('width', '120px');
+
+  sliderLabel = createP('Grid size:'); // assign to global
+  sliderLabel.position(cellSizeSlider.x, cellSizeSlider.y - 30);
+  sliderLabel.style('color', '#fff');
+  sliderLabel.style('font-size', '16px');
+
+  colorMode(HSB, 360, 100, 100); // Use HSB for easy hue changes
+
+  hueSlider = createSlider(0, 360, gridHue, 1);
+  hueSlider.position(windowWidth / 2 + windowWidth / 10, windowHeight - 40); // Top right corner
+  hueSlider.style('width', '120px');
+
+  hueLabel = createP('Grid hue:');
+  hueLabel.position(hueSlider.x, hueSlider.y - 30);
+  hueLabel.style('color', '#fff');
+  hueLabel.style('font-size', '16px');
 
   // Remove any previously created buttons (for hot reloads)
   for (let btn of buttons) btn.remove();
@@ -80,18 +106,30 @@ function positionButtons() {
 
 function updateGridSize() {
   cols = floor(width / cellSize);
-  rows = floor((height - topMargin) / cellSize);
-  // Optionally, reinitialize grid here if needed
+  rows = floor((height - topMargin - bottomMargin) / cellSize);
 }
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   positionButtons();
   updateGridSize();
+  cellSizeSlider.position(windowWidth / 2 - windowWidth / 3, windowHeight - 40);
+  sliderLabel.position(cellSizeSlider.x, cellSizeSlider.y - 30);
+
+  hueSlider.position(windowWidth / 2 + windowWidth / 10, windowHeight - 40);
+  hueLabel.position(hueSlider.x, hueSlider.y - 30);
   // Optionally, you can reinitialize grid here if you want to clear on resize
 }
 
 function draw() {
+  
+  gridHue = hueSlider.value();
+
+  let newCellSize = cellSizeSlider.value();
+  if (newCellSize !== cellSize) {
+    cellSize = newCellSize;
+    updateGridSize();
+  }
   // Create the grid if it doesn't exist
   if (grid.length !== cols || grid[0]?.length !== rows) {
     grid = [];
@@ -116,17 +154,21 @@ function draw() {
   fill(20);
   rect(0, 0, width, topMargin);
 
+  noStroke();
+  fill(20);
+  rect(0, height - bottomMargin, width, bottomMargin);
+
   // Draw the grid
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
       if (grid[i][j] === 1) {
-        let intensity = map(aliveCount[i][j], 0, 10, 255, 0);
-        fill(intensity, 0, 0);
+        let intensity = map(aliveCount[i][j], 0, 10, 100, 40);
+        fill(gridHue, 80, intensity);
       } else {
-        let intensity = map(aliveCount[i][j], 0, 10, 255, 100);
-        fill(100, 0, intensity);
+        let intensity = map(aliveCount[i][j], 0, 10, 30, 90);
+        fill(gridHue, 30, intensity);
       }
-      stroke(100, 100, 250);
+      stroke(gridHue, 40, 80);
       rect(i * cellSize, j * cellSize + topMargin, cellSize, cellSize);
     }
   }
