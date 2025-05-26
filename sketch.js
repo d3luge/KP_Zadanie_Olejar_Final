@@ -17,6 +17,8 @@ let sliderLabel;
 let hueSlider;
 let gridHue = 0;
 let hueLabel;
+let blurSlider;
+let blurLabel;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -38,7 +40,7 @@ function setup() {
   ];
 
   cellSizeSlider = createSlider(5, 25, cellSize, 1);
-  cellSizeSlider.position(windowWidth / 2 - windowWidth / 3, windowHeight - 40); // Place it below the buttons
+  cellSizeSlider.position(windowWidth / 2 - windowWidth / 4, windowHeight - 40); // Place it below the buttons
   cellSizeSlider.style('width', '120px');
 
   sliderLabel = createP('Grid size:'); // assign to global
@@ -56,6 +58,15 @@ function setup() {
   hueLabel.position(hueSlider.x, hueSlider.y - 30);
   hueLabel.style('color', '#fff');
   hueLabel.style('font-size', '16px');
+
+  blurSlider = createSlider(0, 8, 0, 1); // 0=no blur, up to 8=strong blur
+  blurSlider.position(windowWidth / 2 - 60, windowHeight - 40);
+  blurSlider.style('width', '120px');
+
+  blurLabel = createP('Blur/Edge:');
+  blurLabel.position(blurSlider.x, blurSlider.y - 30);
+  blurLabel.style('color', '#fff');
+  blurLabel.style('font-size', '16px');
 
   // Remove any previously created buttons (for hot reloads)
   for (let btn of buttons) btn.remove();
@@ -113,11 +124,14 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   positionButtons();
   updateGridSize();
-  cellSizeSlider.position(windowWidth / 2 - windowWidth / 3, windowHeight - 40);
+  cellSizeSlider.position(windowWidth / 2 - windowWidth / 4, windowHeight - 40);
   sliderLabel.position(cellSizeSlider.x, cellSizeSlider.y - 30);
 
   hueSlider.position(windowWidth / 2 + windowWidth / 10, windowHeight - 40);
   hueLabel.position(hueSlider.x, hueSlider.y - 30);
+
+  blurSlider.position(windowWidth / 2 -60 , windowHeight - 40);
+  blurLabel.position(blurSlider.x, blurSlider.y - 30);
   // Optionally, you can reinitialize grid here if you want to clear on resize
 }
 
@@ -162,15 +176,21 @@ function draw() {
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
       if (grid[i][j] === 1) {
-        let intensity = map(aliveCount[i][j], 0, 10, 100, 40);
+        let intensity = map(aliveCount[i][j], 0, 10, 180, 40);
         fill(gridHue, 80, intensity);
       } else {
-        let intensity = map(aliveCount[i][j], 0, 10, 30, 90);
-        fill(gridHue, 30, intensity);
+        let intensity = map(aliveCount[i][j], 0, 10, 30, 200);
+        fill(intensity, gridHue, intensity);
       }
-      stroke(gridHue, 40, 80);
+      stroke(0, 40, 80);
       rect(i * cellSize, j * cellSize + topMargin, cellSize, cellSize);
     }
+  }
+
+  let blurAmount = blurSlider.value();
+  if (blurAmount > 0) {
+    filter(BLUR, blurAmount);
+    filter(POSTERIZE, 4);
   }
 
   if (isRunning) {
